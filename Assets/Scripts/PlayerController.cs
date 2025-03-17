@@ -59,8 +59,8 @@ public class PlayerController : MonoBehaviour
         _isMoving = true;
         _moveCooldown = _beatManager.GetBeatInterval(); // ÷ÿ÷√CD
         animator.SetBool("IsMoving", true);
-        animator.SetFloat("MoveX", _moveDirection.x);
-        animator.SetFloat("MoveY", _moveDirection.y);
+        animator.SetFloat("DirectionX", _moveDirection.x);
+        animator.SetFloat("DirectionY", _moveDirection.y);
     }
 
     void MoveWithAnimation()
