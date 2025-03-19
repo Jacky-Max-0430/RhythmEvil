@@ -41,8 +41,16 @@ public class PlayerController : MonoBehaviour
         _moveDirection = Vector2Int.zero;
         if (Input.GetKey(KeyCode.W)) _moveDirection.y = 1;
         if (Input.GetKey(KeyCode.S)) _moveDirection.y = -1;
-        if (Input.GetKey(KeyCode.A)) _moveDirection.x = -1;
-        if (Input.GetKey(KeyCode.D)) _moveDirection.x = 1;
+        if (Input.GetKey(KeyCode.A))
+        {
+            _moveDirection.x = -1;
+            transform.rotation = Quaternion.Euler(0, 180, 0);
+        }
+        if (Input.GetKey(KeyCode.D))
+        {
+            _moveDirection.x = 1;
+            transform.rotation = Quaternion.Euler(0, 0, 0);
+        }
 
         if (_moveDirection != Vector2Int.zero)
         {
