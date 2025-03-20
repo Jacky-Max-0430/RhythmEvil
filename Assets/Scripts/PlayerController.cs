@@ -1,5 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
+
 using UnityEngine;
 
 // PlayerController.cs
@@ -39,10 +38,29 @@ public class PlayerController : MonoBehaviour
         if (_moveCooldown > 0 || _isMoving) return;
 
         _moveDirection = Vector2Int.zero;
-        if (Input.GetKey(KeyCode.W)) _moveDirection.y = 1;
-        if (Input.GetKey(KeyCode.S)) _moveDirection.y = -1;
-        if (Input.GetKey(KeyCode.A)) _moveDirection.x = -1;
-        if (Input.GetKey(KeyCode.D)) _moveDirection.x = 1;
+
+        // 优先处理垂直方向输入（W/S）
+        if (Input.GetKey(KeyCode.W))
+        {
+            _moveDirection.y = 1;
+        }
+        else if (Input.GetKey(KeyCode.S))
+        {
+            _moveDirection.y = -1;
+        }
+
+        // 如果没有垂直输入，再处理水平方向（A/D）
+        if (_moveDirection.y == 0)
+        {
+            if (Input.GetKey(KeyCode.A))
+            {
+                _moveDirection.x = -1;
+            }
+            else if (Input.GetKey(KeyCode.D))
+            {
+                _moveDirection.x = 1;
+            }
+        }
 
         if (_moveDirection != Vector2Int.zero)
         {

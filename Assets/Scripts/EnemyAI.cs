@@ -1,5 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
+
 using UnityEngine;
 
 // EnemyAI.cs
@@ -20,31 +19,31 @@ public class EnemyAI : MonoBehaviour
         _grid = GridSystem.Instance;
     }
 
-    void OnEnable() => BeatManager.Instance.OnBeat += OnBeatAction;
+    //void OnEnable() => BeatManager.Instance.OnBeat += OnBeatAction;
 
-    void OnBeatAction()
-    {
-        switch (type)
-        {
-            case EnemyType.Melee:
-                ChasePlayer();
-                break;
-            //case EnemyType.Ranged:
-            //    ShootProjectile();
-            //    break;
-            //case EnemyType.Boss:
-            //    BossBehavior();
-                //break;
-        }
-    }
+    //void OnBeatAction()
+    //{
+    //    switch (type)
+    //    {
+    //        case EnemyType.Melee:
+    //            ChasePlayer();
+    //            break;
+    //        //case EnemyType.Ranged:
+    //        //    ShootProjectile();
+    //        //    break;
+    //        //case EnemyType.Boss:
+    //        //    BossBehavior();
+    //            //break;
+    //    }
+    //}
 
-    void ChasePlayer()
-    {
-        Vector3 direction = (_player.position - transform.position).normalized;
-        Vector3 targetPos = transform.position + direction * _grid.gridSize;
-        if (_grid.IsPositionValid(targetPos))
-            transform.position = _grid.SnapToGrid(targetPos);
-    }
+    //void ChasePlayer()
+    //{
+    //    Vector3 direction = (_player.position - transform.position).normalized;
+    //    Vector3 targetPos = transform.position + direction * _grid.gridSize;
+    //    if (_grid.IsPositionValid(targetPos))
+    //        transform.position = _grid.SnapToGrid(targetPos);
+    //}
 
     // 其他行为方法...
 }
