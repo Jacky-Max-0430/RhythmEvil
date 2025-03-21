@@ -37,11 +37,11 @@ public class GridSystem : MonoBehaviour
             && targetPos.y >= -mapSize.y / 2 && targetPos.y <= mapSize.y / 2;
     }
 
-    void OnDrawGizmos()
-    {
-        Gizmos.color = Color.gray;
-        for (int x = -mapSize.x / 2; x <= mapSize.x / 2; x++)
-            for (int y = -mapSize.y / 2; y <= mapSize.y / 2; y++)
-                Gizmos.DrawWireCube(new Vector3(x, y, 0), Vector3.one * gridSize);
-    }
+    //void OnDrawGizmos()
+    //{
+    //    Gizmos.color = Color.gray;
+    //    for (int x = -mapSize.x / 2; x <= mapSize.x / 2; x++)
+    //        for (int y = -mapSize.y / 2; y <= mapSize.y / 2; y++)
+    //            Gizmos.DrawWireCube(new Vector3(x, y, 0), Vector3.one * gridSize);
+    //}
 }
