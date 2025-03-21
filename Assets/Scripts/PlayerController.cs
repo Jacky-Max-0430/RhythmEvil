@@ -1,4 +1,6 @@
 
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 // PlayerController.cs
@@ -8,14 +10,30 @@ public class PlayerController : MonoBehaviour
     public int attackPower = 1;
     public float moveSpeed = 5f; // 移动动画速度
     public Animator animator;    // 动画控制器
+    public float attackDuration = 0.3f; // 攻击动画时长
 
     private Vector2Int _moveDirection;
     private GridSystem _grid;
     private BeatManager _beatManager;
     private float _moveCooldown;
+    private float _attackCooldown;
     private bool _isMoving;
+    private bool _isAttacking;
     private Vector3 _targetPosition;
+    public static PlayerController Instance; // 单例静态引用
 
+    void Awake()
+    {
+        // 单例初始化
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject); // 避免重复实例
+        }
+    }
     void Start()
     {
         _grid = GridSystem.Instance;
@@ -24,6 +42,7 @@ public class PlayerController : MonoBehaviour
 
         // 初始化CD为节拍间隔
         _moveCooldown = _beatManager.GetBeatInterval();
+        _attackCooldown = _beatManager.GetBeatInterval();
     }
 
     void Update()
@@ -35,6 +54,16 @@ public class PlayerController : MonoBehaviour
 
     void HandleInput()
     {
+        // 如果正在移动、攻击，或冷却中，则忽略输入
+        if (_moveCooldown > 0 || _isMoving || _isAttacking || _attackCooldown > 0) return;
+
+        Vector2Int attackDirection = GetAttackDirection();
+        if (attackDirection != Vector2Int.zero)
+        {
+            StartAttack(attackDirection);
+            return; // 优先处理攻击
+        }
+
         if (_moveCooldown > 0 || _isMoving) return;
 
         _moveDirection = Vector2Int.zero;
@@ -72,6 +101,40 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    Vector2Int GetAttackDirection()
+    {
+        Vector2Int direction = Vector2Int.zero;
+        if (Input.GetKey(KeyCode.UpArrow)) direction.y = 1;
+        else if (Input.GetKey(KeyCode.DownArrow)) direction.y = -1;
+        else if (Input.GetKey(KeyCode.LeftArrow)) direction.x = -1;
+        else if (Input.GetKey(KeyCode.RightArrow)) direction.x = 1;
+        return direction;
+    }
+
+    void StartAttack(Vector2Int direction)
+    {
+        _isAttacking = true;
+        _attackCooldown = _beatManager.GetBeatInterval(); // 设置攻击冷却（和移动一致）
+        animator.SetTrigger("Attack");
+        animator.SetFloat("DirectionX", direction.x);
+        animator.SetFloat("DirectionY", direction.y);
+        StartCoroutine(AttackAction(direction));
+    }
+
+    IEnumerator AttackAction(Vector2Int direction)
+    {
+        yield return new WaitForSeconds(attackDuration);
+
+        Vector3 attackPosition = transform.position + new Vector3(direction.x, direction.y, 0) * _grid.gridSize;
+        Collider2D hit = Physics2D.OverlapPoint(attackPosition);
+        if (hit != null && hit.CompareTag("Enemy"))
+        {
+            hit.GetComponent<EnemyAI>().TakeDamage(attackPower);
+        }
+
+        _isAttacking = false;
+    }
+
     void StartMovement()
     {
         _isMoving = true;
@@ -98,8 +161,8 @@ public class PlayerController : MonoBehaviour
 
     void UpdateCooldown()
     {
-        if (_moveCooldown > 0)
-            _moveCooldown -= Time.deltaTime;
+        if (_moveCooldown > 0)  _moveCooldown -= Time.deltaTime;
+        if (_attackCooldown > 0) _attackCooldown -= Time.deltaTime;
     }
 
     bool CheckCollision(Vector3 targetPos)
@@ -108,5 +171,5 @@ public class PlayerController : MonoBehaviour
         return hit != null && hit.CompareTag("Enemy");
     }
 
-    //public void TakeDamage(int damage) => GameManager.Instance.PlayerTakeDamage(damage);
+    public void TakeDamage(int damage) => GameManager.Instance.PlayerTakeDamage(damage);
 }

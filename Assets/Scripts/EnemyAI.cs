@@ -2,48 +2,48 @@
 using UnityEngine;
 
 // EnemyAI.cs
-public enum EnemyType { Melee, Ranged, Boss }
+
+
+
 
 public class EnemyAI : MonoBehaviour
 {
-    public EnemyType type;
-    public int health;
-    public int attackPower;
+    // 公共字段（改为protected便于子类访问）
+    public int health = 1;
+    public int attackPower = 1;
+    public GameObject deathEffectPrefab;
+    [SerializeField] protected Animator animator; // 改为protected
 
-    private Transform _player;
-    private GridSystem _grid;
+    // 组件引用
+    protected Transform _player;
+    protected GridSystem _grid;
 
-    void Start()
+    protected virtual void Start()
     {
-        _player = GameObject.FindGameObjectWithTag("Player").transform;
+        _player = PlayerController.Instance.transform;
         _grid = GridSystem.Instance;
+        animator = GetComponent<Animator>(); // 自动获取Animator
     }
 
-    //void OnEnable() => BeatManager.Instance.OnBeat += OnBeatAction;
+    // 虚方法：允许子类重写受伤逻辑
+    public virtual void TakeDamage(int damage)
+    {
+        health -= damage;
+        animator.SetTrigger("Hurt");
 
-    //void OnBeatAction()
-    //{
-    //    switch (type)
-    //    {
-    //        case EnemyType.Melee:
-    //            ChasePlayer();
-    //            break;
-    //        //case EnemyType.Ranged:
-    //        //    ShootProjectile();
-    //        //    break;
-    //        //case EnemyType.Boss:
-    //        //    BossBehavior();
-    //            //break;
-    //    }
-    //}
+        if (health <= 0)
+        {
+            Die();
+        }
+    }
 
-    //void ChasePlayer()
-    //{
-    //    Vector3 direction = (_player.position - transform.position).normalized;
-    //    Vector3 targetPos = transform.position + direction * _grid.gridSize;
-    //    if (_grid.IsPositionValid(targetPos))
-    //        transform.position = _grid.SnapToGrid(targetPos);
-    //}
-
-    // 其他行为方法...
+    // 虚方法：允许子类扩展死亡逻辑
+    protected virtual void Die()
+    {
+        if (deathEffectPrefab != null)
+        {
+            Instantiate(deathEffectPrefab, transform.position, Quaternion.identity);
+        }
+        Destroy(gameObject);
+    }
 }
