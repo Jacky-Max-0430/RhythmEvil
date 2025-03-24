@@ -1,139 +1,222 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PaladinAI : EnemyAI
 {
-    // 特有字段
-    public float moveSpeed = 5f;
-    private enum BossState { Idle, Moving, Charging, Attacking }
-    private BossState _currentState = BossState.Idle;
-    private BeatManager _beatManager;
-    private Vector2Int _nextMoveDirection;
-    private int _beatCounter;
+    //--------------- 节拍行为配置 ---------------
+    [Header("节拍行为配置")]
+    [SerializeField] private GameObject _chargeEffect;   // 蓄力特效
+    [SerializeField] private GameObject _dashEffect;     // 冲锋特效
+    [SerializeField] private GameObject _aoeEffect;      // 范围攻击特效
+    [SerializeField] private int _restBeats = 2;         // 待机节拍数
 
-    // 覆盖基类Start方法
+    //--------------- 运行时状态 ---------------
+    private enum BossPhase
+    {
+        Idle,
+        Charging,
+        Dashing,
+        MultiAttack,
+        Resting
+    }
+
+    private BossPhase _currentPhase = BossPhase.Idle;
+    private BeatManager _beatManager;
+    private int _beatCounter;
+    private int _actionStep;      // 当前行动步骤
+    private Vector2Int _dashDirection; // 冲锋方向
+    private int _restCounter;     // 待机计数器
+
     protected override void Start()
     {
-        base.Start(); // 必须调用基类初始化
-        _beatManager = BeatManager.Instance;
-        _beatManager.OnBeat += OnBeat;
-        health = 10; // 初始化Boss血量
+        base.Start();
+        health = 10;
         attackPower = 2;
+        _beatManager = BeatManager.Instance;
+        _beatManager.OnBeat += OnBeatAction;
+
+        _chargeEffect.SetActive(false);
+        _dashEffect.SetActive(false);
+        _aoeEffect.SetActive(false);
     }
 
     void OnDestroy()
     {
         if (_beatManager != null)
-            _beatManager.OnBeat -= OnBeat;
+            _beatManager.OnBeat -= OnBeatAction;
     }
 
-    // 特有逻辑：节拍驱动
-    private void OnBeat()
+    private void OnBeatAction()
     {
         _beatCounter++;
-        if (_currentState == BossState.Idle)
+
+        switch (_currentPhase)
         {
-            DecideNextAction();
+            case BossPhase.Idle:
+                if (ShouldStartCharging())
+                    StartCharging();
+                break;
+
+            case BossPhase.Charging:
+                ChooseAttackPattern();
+                break;
+
+            case BossPhase.Dashing:
+                ExecuteDashStep();
+                break;
+
+            case BossPhase.MultiAttack:
+                ExecuteAoEStep();
+                break;
+
+            case BossPhase.Resting:
+                HandleResting();
+                break;
         }
     }
 
-    void DecideNextAction()
+    //--------------- 主要行为逻辑 ---------------
+    private bool ShouldStartCharging()
     {
-        if (_beatCounter % 3 == 0)
+        // 每5拍触发一次蓄力
+        return _beatCounter % 5 == 0;
+    }
+
+    private void StartCharging()
+    {
+        _currentPhase = BossPhase.Charging;
+        _chargeEffect.SetActive(true);
+        animator.Play("Charge");
+    }
+
+    private void ChooseAttackPattern()
+    {
+        _chargeEffect.SetActive(false);
+
+        // 50%概率选择攻击模式
+        if (Random.value > 0.5f)
         {
-            StartCoroutine(ChargeAndAttack());
+            InitDashAttack();
         }
-        else if (_beatCounter % 2 == 0)
+        else
         {
-            StartCoroutine(Move());
+            InitMultiAttack();
         }
     }
 
-    // 移动逻辑
-    IEnumerator Move()
+    //--------------- 冲锋攻击逻辑 ---------------
+    private void InitDashAttack()
     {
-        _currentState = BossState.Moving;
-        _nextMoveDirection = GetRandomDirection();
+        _currentPhase = BossPhase.Dashing;
+        _actionStep = 0;
+        _dashDirection = GetPlayerDirection();
+        _dashEffect.SetActive(true);
+    }
 
-        Vector3 targetPos = transform.position + new Vector3(_nextMoveDirection.x, _nextMoveDirection.y, 0) * _grid.gridSize;
-
-        // 检测碰撞
-        if (_grid.IsPositionValid(targetPos))
+    private void ExecuteDashStep()
+    {
+        if (_actionStep >= 3)
         {
-            // 平滑移动
-            float elapsed = 0;
-            Vector3 startPos = transform.position;
-            while (elapsed < moveSpeed)
+            EndAction();
+            return;
+        }
+
+        // 每次移动两格
+        for (int i = 0; i < 2; i++)
+        {
+            Vector3 targetPos = transform.position +
+                new Vector3(_dashDirection.x, _dashDirection.y, 0) * _grid.gridSize;
+
+            if (_grid.IsPositionValid(targetPos))
             {
-                transform.position = Vector3.Lerp(startPos, targetPos, elapsed / moveSpeed);
-                elapsed += Time.deltaTime;
-                yield return null;
-            }
-            transform.position = targetPos;
-
-            // 推动玩家或造成伤害
-            CheckPlayerPush(_nextMoveDirection);
-        }
-
-        _currentState = BossState.Idle;
-    }
-
-    // 蓄力攻击逻辑
-    IEnumerator ChargeAndAttack()
-    {
-        _currentState = BossState.Charging;
-        // 显示蓄力特效（需美术支持）
-        yield return new WaitForSeconds(_beatManager.GetBeatInterval());
-
-        _currentState = BossState.Attacking;
-        AreaAttack();
-        _currentState = BossState.Idle;
-    }
-
-    // 推动玩家检测
-    void CheckPlayerPush(Vector2Int direction)
-    {
-        Vector3 pushTarget = transform.position + new Vector3(direction.x, direction.y, 0) * _grid.gridSize;
-        Collider2D hit = Physics2D.OverlapPoint(pushTarget);
-        if (hit != null && hit.CompareTag("Player"))
-        {
-            Vector3 playerNewPos = hit.transform.position + new Vector3(direction.x, direction.y, 0) * _grid.gridSize;
-            if (_grid.IsPositionValid(playerNewPos))
-            {
-                hit.transform.position = playerNewPos;
+                transform.position = targetPos;
+                CheckCollision(_dashDirection);
             }
             else
             {
-                hit.GetComponent<PlayerController>().TakeDamage(2);
+                // 撞墙提前结束
+                EndAction();
+                return;
             }
         }
+
+        _actionStep++;
+        animator.Play("DashMove");
     }
 
-    // 范围攻击
-    void AreaAttack()
+    //--------------- 多重范围攻击逻辑 ---------------
+    private void InitMultiAttack()
     {
-        Collider2D[] hits = Physics2D.OverlapBoxAll(transform.position, new Vector2(_grid.gridSize * 3, _grid.gridSize * 3), 0);
+        _currentPhase = BossPhase.MultiAttack;
+        _actionStep = 0;
+        _aoeEffect.SetActive(true);
+    }
+
+    private void ExecuteAoEStep()
+    {
+        if (_actionStep >= 3)
+        {
+            EndAction();
+            return;
+        }
+
+        Collider2D[] hits = Physics2D.OverlapCircleAll(
+            transform.position,
+            _grid.gridSize * 1.5f
+        );
+
         foreach (var hit in hits)
         {
             if (hit.CompareTag("Player"))
             {
-                hit.GetComponent<PlayerController>().TakeDamage(attackPower);
+                hit.GetComponent<PlayerController>().TakeDamage(1);
             }
+        }
+
+        _actionStep++;
+        animator.Play("AoEAttack");
+    }
+
+    //--------------- 通用逻辑 ---------------
+    private Vector2Int GetPlayerDirection()
+    {
+        Vector3 dir = (PlayerController.Instance.transform.position - transform.position).normalized;
+        return new Vector2Int(
+            Mathf.RoundToInt(dir.x),
+            Mathf.RoundToInt(dir.y)
+        );
+    }
+
+    private void CheckCollision(Vector2Int direction)
+    {
+        Collider2D hit = Physics2D.OverlapPoint(transform.position);
+        if (hit != null && hit.CompareTag("Player"))
+        {
+            hit.GetComponent<PlayerController>().TakeDamage(2);
+            EndAction(); // 碰撞后立即结束
         }
     }
 
-    // 随机选择方向
-    Vector2Int GetRandomDirection()
+    private void EndAction()
     {
-        Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
-        return directions[Random.Range(0, directions.Length)];
+        _currentPhase = BossPhase.Resting;
+        _restCounter = 0;
+        _dashEffect.SetActive(false);
+        _aoeEffect.SetActive(false);
     }
 
-    // 覆盖受伤逻辑：添加Boss受击特效
+    private void HandleResting()
+    {
+        _restCounter++;
+        if (_restCounter >= _restBeats)
+        {
+            _currentPhase = BossPhase.Idle;
+        }
+    }
+
+    //--------------- 重写基类方法 ---------------
     public override void TakeDamage(int damage)
     {
-        base.TakeDamage(damage); // 调用基类逻辑
-       
+        if (_currentPhase != BossPhase.Resting) return; // 仅限休息时受击
+        base.TakeDamage(damage);
     }
 }

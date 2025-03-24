@@ -11,6 +11,7 @@ public class PlayerController : MonoBehaviour
     public float moveSpeed = 5f; // 移动动画速度
     public Animator animator;    // 动画控制器
     public float attackDuration = 0.3f; // 攻击动画时长
+    public GameObject deathEffectPrefab;
 
     private Vector2Int _moveDirection;
     private GridSystem _grid;
@@ -50,6 +51,9 @@ public class PlayerController : MonoBehaviour
         HandleInput();
         UpdateCooldown();
         MoveWithAnimation();
+        //if (Input.GetKeyDown(KeyCode.T))
+        //    GetComponent<Animator>().SetTrigger("Hurt");
+
     }
 
     void HandleInput()
@@ -114,7 +118,7 @@ public class PlayerController : MonoBehaviour
     void StartAttack(Vector2Int direction)
     {
         _isAttacking = true;
-        _attackCooldown = _beatManager.GetBeatInterval(); // 设置攻击冷却（和移动一致）
+        _attackCooldown = _beatManager.GetBeatInterval()-0.2f; // 设置攻击冷却（和移动一致）
         animator.SetTrigger("Attack");
         animator.SetFloat("DirectionX", direction.x);
         animator.SetFloat("DirectionY", direction.y);
@@ -138,7 +142,7 @@ public class PlayerController : MonoBehaviour
     void StartMovement()
     {
         _isMoving = true;
-        _moveCooldown = _beatManager.GetBeatInterval(); // 重置CD
+        _moveCooldown = _beatManager.GetBeatInterval()-0.2f; // 重置CD
         animator.SetBool("IsMoving", true);
         animator.SetFloat("DirectionX", _moveDirection.x);
         animator.SetFloat("DirectionY", _moveDirection.y);
@@ -171,5 +175,24 @@ public class PlayerController : MonoBehaviour
         return hit != null && hit.CompareTag("Enemy");
     }
 
-    public void TakeDamage(int damage) => GameManager.Instance.PlayerTakeDamage(damage);
+    public void TakeDamage(int damage)
+    {
+        health -= damage;
+        animator.SetTrigger("Hurt");
+
+        if (health <= 0)
+        {
+            Die();
+        }
+    }
+
+    
+   private void Die()
+    {
+        if (deathEffectPrefab != null)
+        {
+            Instantiate(deathEffectPrefab, transform.position, Quaternion.identity);
+        }
+        Destroy(gameObject);
+    }
 }
