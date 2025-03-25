@@ -13828,11 +13828,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1432295285706394703, guid: d6cc5112dc0c2f040b92accb125f50f6, type: 3}
       propertyPath: m_SpriteTilingProperty.oldSize.x
-      value: 0.9
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1432295285706394703, guid: d6cc5112dc0c2f040b92accb125f50f6, type: 3}
       propertyPath: m_SpriteTilingProperty.oldSize.y
-      value: 1.4
+      value: 1.5555556
       objectReference: {fileID: 0}
     - target: {fileID: 1974131202862802661, guid: d6cc5112dc0c2f040b92accb125f50f6, type: 3}
       propertyPath: m_LocalScale.x
@@ -13890,6 +13890,10 @@ PrefabInstance:
       propertyPath: m_ConstrainProportionsScale
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 5695423168979614203, guid: d6cc5112dc0c2f040b92accb125f50f6, type: 3}
+      propertyPath: attackEffectPrefab
+      value: 
+      objectReference: {fileID: 4224840305483779259, guid: 86dea2ee2c147c54aadf9c10895878f8, type: 3}
     - target: {fileID: 6158951298916844201, guid: d6cc5112dc0c2f040b92accb125f50f6, type: 3}
       propertyPath: m_Name
       value: Player

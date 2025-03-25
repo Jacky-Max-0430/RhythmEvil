@@ -23,6 +23,9 @@ public class PlayerController : MonoBehaviour
     private Vector3 _targetPosition;
     public static PlayerController Instance; // 单例静态引用
 
+    // 在PlayerController类中添加
+    public GameObject attackEffectPrefab; // 攻击特效预制体
+    public float effectDuration = 0.5f;   // 特效持续时间
     void Awake()
     {
         // 单例初始化
@@ -127,16 +130,40 @@ public class PlayerController : MonoBehaviour
 
     IEnumerator AttackAction(Vector2Int direction)
     {
-        yield return new WaitForSeconds(attackDuration);
+        // 生成特效
+        if (attackEffectPrefab != null)
+        {
+            Vector3 spawnPos = transform.position +
+                new Vector3(direction.x, direction.y, 0) * _grid.gridSize;
 
+            // 计算特效旋转角度
+            Quaternion rotation = Quaternion.Euler(0, 0, GetEffectRotation(direction));
+
+            GameObject effect = Instantiate(
+                attackEffectPrefab,
+                spawnPos,
+                rotation
+            );
+            Destroy(effect, effectDuration); // 自动销毁
+        }
+
+        yield return new WaitForSeconds(attackDuration);
+        // ...原有伤害判定逻辑...
         Vector3 attackPosition = transform.position + new Vector3(direction.x, direction.y, 0) * _grid.gridSize;
         Collider2D hit = Physics2D.OverlapPoint(attackPosition);
         if (hit != null && hit.CompareTag("Enemy"))
         {
             hit.GetComponent<EnemyAI>().TakeDamage(attackPower);
         }
+    }
 
-        _isAttacking = false;
+    // 根据攻击方向计算特效旋转角度
+    float GetEffectRotation(Vector2Int direction)
+    {
+        if (direction == Vector2Int.up) return 90f;     // 上
+        if (direction == Vector2Int.down) return -90f;  // 下
+        if (direction == Vector2Int.left) return 180f;  // 左
+        return 0f;                                      // 右
     }
 
     void StartMovement()

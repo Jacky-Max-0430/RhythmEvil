@@ -136,6 +136,7 @@ public class PaladinAI : EnemyAI
         _currentPhase = BossPhase.Dashing;
         _actionStep = 0;
         _dashDirection = GetPlayerDirection();
+        animator.SetTrigger("Attack");
         //_dashEffect.SetActive(true);
         Debug.Log("<color=cyan>[ÐÐÎª] Æô¶¯³å·æ¹¥»÷</color>");
     }
@@ -220,6 +221,7 @@ public class PaladinAI : EnemyAI
     {
         _currentPhase = BossPhase.Resting;
         _restCounter = 0;
+        animator.ResetTrigger("Attack");
         //_dashEffect.SetActive(false);
         //_aoeEffect.SetActive(false);
     }
