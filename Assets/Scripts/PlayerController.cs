@@ -119,9 +119,9 @@ public class PlayerController : MonoBehaviour
     {
         _isAttacking = true;
         _attackCooldown = _beatManager.GetBeatInterval()-0.2f; // 设置攻击冷却（和移动一致）
-        animator.SetTrigger("Attack");
-        animator.SetFloat("DirectionX", direction.x);
-        animator.SetFloat("DirectionY", direction.y);
+        //animator.SetTrigger("Attack");
+        //animator.SetFloat("DirectionX", direction.x);
+        //animator.SetFloat("DirectionY", direction.y);
         StartCoroutine(AttackAction(direction));
     }
 
