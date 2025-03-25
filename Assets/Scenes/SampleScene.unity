@@ -488,7 +488,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 01aa02130bb1bc14e9163a37c6bb4b93, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bpm: 60
+  bpm: 120
   musicSource: {fileID: 1166098348}
 --- !u!4 &1166098350
 Transform:
@@ -13698,15 +13698,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1974131202862802661, guid: d6cc5112dc0c2f040b92accb125f50f6, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.7
+      value: 1.4
       objectReference: {fileID: 0}
     - target: {fileID: 1974131202862802661, guid: d6cc5112dc0c2f040b92accb125f50f6, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.7
+      value: 1.4
       objectReference: {fileID: 0}
     - target: {fileID: 1974131202862802661, guid: d6cc5112dc0c2f040b92accb125f50f6, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1.7
+      value: 1.4
       objectReference: {fileID: 0}
     - target: {fileID: 1974131202862802661, guid: d6cc5112dc0c2f040b92accb125f50f6, type: 3}
       propertyPath: m_LocalPosition.x
@@ -18631,13 +18631,17 @@ PrefabInstance:
       propertyPath: moveSpeed
       value: 2000
       objectReference: {fileID: 0}
+    - target: {fileID: 1342934638701580793, guid: f6311d56a69b5f64ab473343526ab2b2, type: 3}
+      propertyPath: attackPower
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 7947065607458035322, guid: f6311d56a69b5f64ab473343526ab2b2, type: 3}
       propertyPath: m_Name
       value: Paladin
       objectReference: {fileID: 0}
     - target: {fileID: 7947065607458035322, guid: f6311d56a69b5f64ab473343526ab2b2, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
