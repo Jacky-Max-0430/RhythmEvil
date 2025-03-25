@@ -1,7 +1,7 @@
-
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 // PlayerController.cs
 public class PlayerController : MonoBehaviour
@@ -12,6 +12,7 @@ public class PlayerController : MonoBehaviour
     public Animator animator;    // 动画控制器
     public float attackDuration = 0.3f; // 攻击动画时长
     public GameObject deathEffectPrefab;
+    public GameObject attackEffectPrefab;
 
     private Vector2Int _moveDirection;
     private GridSystem _grid;
@@ -23,9 +24,6 @@ public class PlayerController : MonoBehaviour
     private Vector3 _targetPosition;
     public static PlayerController Instance; // 单例静态引用
 
-    // 在PlayerController类中添加
-    public GameObject attackEffectPrefab; // 攻击特效预制体
-    public float effectDuration = 0.5f;   // 特效持续时间
     void Awake()
     {
         // 单例初始化
@@ -54,8 +52,8 @@ public class PlayerController : MonoBehaviour
         HandleInput();
         UpdateCooldown();
         MoveWithAnimation();
-        //if (Input.GetKeyDown(KeyCode.T))
-        //    GetComponent<Animator>().SetTrigger("Hurt");
+        if (Input.GetKeyDown(KeyCode.T))
+            GetComponent<Animator>().SetTrigger("Hurt");
 
     }
 
@@ -121,55 +119,51 @@ public class PlayerController : MonoBehaviour
     void StartAttack(Vector2Int direction)
     {
         _isAttacking = true;
-        _attackCooldown = _beatManager.GetBeatInterval()-0.2f; // 设置攻击冷却（和移动一致）
-        //animator.SetTrigger("Attack");
-        //animator.SetFloat("DirectionX", direction.x);
-        //animator.SetFloat("DirectionY", direction.y);
+        _attackCooldown = _beatManager.GetBeatInterval() - 0.2f; // 设置攻击冷却（和移动一致）
+        animator.SetTrigger("Attack");
+        animator.SetFloat("DirectionX", direction.x);
+        animator.SetFloat("DirectionY", direction.y);
+        if (attackEffectPrefab != null)
+        {
+            // 特效位置
+            Vector3 spawnPosition = transform.position +
+                new Vector3(direction.x, direction.y, 0) * _grid.gridSize;
+
+            // 旋转角度
+            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+            Quaternion rotation = Quaternion.AngleAxis(angle, Vector3.forward);
+
+            // 生成特效
+            GameObject effect = Instantiate(
+                attackEffectPrefab,
+                spawnPosition,
+                rotation
+            );
+
+            //自动销毁特效
+            Destroy(effect, 0.3f);
+        }
         StartCoroutine(AttackAction(direction));
     }
 
     IEnumerator AttackAction(Vector2Int direction)
     {
-        // 生成特效
-        if (attackEffectPrefab != null)
-        {
-            Vector3 spawnPos = transform.position +
-                new Vector3(direction.x, direction.y, 0) * _grid.gridSize;
-
-            // 计算特效旋转角度
-            Quaternion rotation = Quaternion.Euler(0, 0, GetEffectRotation(direction));
-
-            GameObject effect = Instantiate(
-                attackEffectPrefab,
-                spawnPos,
-                rotation
-            );
-            Destroy(effect, effectDuration); // 自动销毁
-        }
-
         yield return new WaitForSeconds(attackDuration);
-        // ...原有伤害判定逻辑...
+
         Vector3 attackPosition = transform.position + new Vector3(direction.x, direction.y, 0) * _grid.gridSize;
         Collider2D hit = Physics2D.OverlapPoint(attackPosition);
         if (hit != null && hit.CompareTag("Enemy"))
         {
             hit.GetComponent<EnemyAI>().TakeDamage(attackPower);
         }
-    }
 
-    // 根据攻击方向计算特效旋转角度
-    float GetEffectRotation(Vector2Int direction)
-    {
-        if (direction == Vector2Int.up) return 90f;     // 上
-        if (direction == Vector2Int.down) return -90f;  // 下
-        if (direction == Vector2Int.left) return 180f;  // 左
-        return 0f;                                      // 右
+        _isAttacking = false;
     }
 
     void StartMovement()
     {
         _isMoving = true;
-        _moveCooldown = _beatManager.GetBeatInterval()-0.2f; // 重置CD
+        _moveCooldown = _beatManager.GetBeatInterval() - 0.2f; // 重置CD
         animator.SetBool("IsMoving", true);
         animator.SetFloat("DirectionX", _moveDirection.x);
         animator.SetFloat("DirectionY", _moveDirection.y);
@@ -192,7 +186,7 @@ public class PlayerController : MonoBehaviour
 
     void UpdateCooldown()
     {
-        if (_moveCooldown > 0)  _moveCooldown -= Time.deltaTime;
+        if (_moveCooldown > 0) _moveCooldown -= Time.deltaTime;
         if (_attackCooldown > 0) _attackCooldown -= Time.deltaTime;
     }
 
@@ -213,13 +207,26 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    
-   private void Die()
+
+    private void Die()
     {
         if (deathEffectPrefab != null)
         {
             Instantiate(deathEffectPrefab, transform.position, Quaternion.identity);
         }
+
+        StartCoroutine(ReloadSceneAfterDeath());
+
         Destroy(gameObject);
+        
+    }
+
+   //死亡回到开始场景
+    IEnumerator ReloadSceneAfterDeath()
+    {
+        yield return new WaitForSeconds(1f);
+
+        // 重新加载起始场景
+        SceneManager.LoadScene("Start");
     }
 }
