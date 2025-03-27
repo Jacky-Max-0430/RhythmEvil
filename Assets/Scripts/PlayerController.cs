@@ -199,34 +199,36 @@ public class PlayerController : MonoBehaviour
     public void TakeDamage(int damage)
     {
         health -= damage;
-        animator.SetTrigger("Hurt");
+        //animator.SetTrigger("Hurt");
 
         if (health <= 0)
         {
-            Die();
+            //Die();
+            Destroy(gameObject);
+            SceneManager.LoadScene("Start");
         }
     }
 
 
-    private void Die()
-    {
-        if (deathEffectPrefab != null)
-        {
-            Instantiate(deathEffectPrefab, transform.position, Quaternion.identity);
-        }
+    //private void Die()
+    //{
+    //    //if (deathEffectPrefab != null)
+    //    //{
+    //    //    Instantiate(deathEffectPrefab, transform.position, Quaternion.identity);
+    //    //}
 
-        StartCoroutine(ReloadSceneAfterDeath());
+    //    StartCoroutine(ReloadSceneAfterDeath());
 
-        Destroy(gameObject);
+    //    Destroy(gameObject);
         
-    }
+    //}
 
    //死亡回到开始场景
-    IEnumerator ReloadSceneAfterDeath()
-    {
-        yield return new WaitForSeconds(1f);
+    //IEnumerator ReloadSceneAfterDeath()
+    //{
+    //    yield return new WaitForSeconds(1f);
 
-        // 重新加载起始场景
-        SceneManager.LoadScene("Start");
-    }
+    //    // 重新加载起始场景
+    //    SceneManager.LoadScene("Start");
+    //}
 }
